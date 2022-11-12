@@ -65,9 +65,9 @@ def test_run_iter_running(tmpdir):
         from time import sleep
         from time import time
         print(time())
-        sleep(0.1)
+        sleep(0.2)
         print(time())
-        sleep(0.1)
+        sleep(0.2)
         print(time())
         """))
 
