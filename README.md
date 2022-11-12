@@ -20,7 +20,7 @@ Scriptor makes it easy to integrate other CLI programs to your Python applicatio
 
 Core features:
 
-- Run programs sync or async using same syntax
+- Run programs sync or async using the same syntax
 - High-level program abstraction
 - Easy program parametrization
 
@@ -69,7 +69,7 @@ scriptor.process.ProcessError: Traceback (most recent call last):
 RuntimeError: Oops!
 ```
 
-Examples to start a process:
+Start a process:
 
 ```python
 >>> process = python.start("print_hello.py")
@@ -87,7 +87,7 @@ False
 'Hello world'
 ```
 
-and some more with async:
+Some more examples with async:
 
 ```python
 >>> # Parametrize a script
@@ -99,7 +99,7 @@ and some more with async:
 
 ```
 
-and example to start async:
+Start with async:
 
 ```python
 >>> process = await python.start_async("print_hello.py")
@@ -115,6 +115,17 @@ False
 >>> # Read the results
 >>> process.read()
 'Hello world'
+```
+
+Change settings ie. the current working directory:
+
+```python
+>>> git = Program('git')
+>>> repo_1 = git.use(cwd="path/to/repo_1")
+>>> repo_2 = git.use(cwd="path/to/repo_2")
+>>> repo_1("status")
+"""On branch main
+nothing to commit, working tree clean"""
 ```
 
 ---

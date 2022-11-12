@@ -19,9 +19,9 @@ Scriptor makes it easy to execute command-line programs from Python.
 
 Features:
 
-- High-level abstraction to run programs
-- Pythonic program parametrization
-- Full async support
+- Run programs sync or async using the same syntax
+- High-level program abstraction
+- Easy program parametrization
 
 A simple example:
 
