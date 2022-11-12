@@ -1,6 +1,6 @@
 
-# WIP: Scriptor
-> Run programs with command-line interface with Python
+# Scriptor
+> Run command-line programs in Python
 
 ---
 
@@ -36,26 +36,85 @@ Scriptor abstracts ``subprocess`` and ``asyncio.subprocess``
 to the same syntax making it easy to use both of them and 
 switch between.  
 
-## More Examples
-
-There is also a query language for arbitrary search queries:
-
 ```python
 >>> from scriptor import Program
->>> python = Program("python")
+>>> python = Program("python3")
 
 >>> # Call the program (and wait for finish)
 >>> python("myscript.py")
 ```
 
-Same with async:
+## More Examples
+
+Here are some examples:
 
 ```python
->>> from scriptor import Program
->>> python = Program("python")
+>>> # Parametrize a script
+>>> python("myscript.py", report_date="2022-11-11")
 
->>> # Call the program (and wait for finish)
->>> await python.call_async("myscript.py")
+>>> # Use different current working directory
+>>> python.use(cwd="path/to/dir")("myscript.py")
+
+>>> # Run script with output (in stdout)
+>>> python("print_hello.py")
+'Hello world'
+
+>>> # Run failing script
+>>> python("failing.py")
+Traceback (most recent call last):
+...
+scriptor.process.ProcessError: Traceback (most recent call last):
+  File "failing.py", line 1, in <module>
+    raise RuntimeError("Oops!")
+RuntimeError: Oops!
+```
+
+Examples to start a process:
+
+```python
+>>> process = python.start("print_hello.py")
+>>> process.finished
+False
+
+>>> # Wait for the process to finish
+>>> process.wait()
+
+>>> # Raise error if process failed
+>>> process.raise_for_return()
+
+>>> # Read the results
+>>> process.read()
+'Hello world'
+```
+
+and some more with async:
+
+```python
+>>> # Parametrize a script
+>>> await python.call_async("myscript.py", report_date="2022-11-11")
+
+>>> # Run script with output (in stdout)
+>>> await python.call_async("print_hello.py")
+'Hello world'
+
+```
+
+and example to start async:
+
+```python
+>>> process = await python.start_async("print_hello.py")
+>>> process.finished
+False
+
+>>> # Wait for the process to finish
+>>> process.wait()
+
+>>> # Raise error if process failed
+>>> process.raise_for_return()
+
+>>> # Read the results
+>>> process.read()
+'Hello world'
 ```
 
 ---

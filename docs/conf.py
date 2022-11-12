@@ -102,7 +102,7 @@ html_sidebars = {
 html_theme_options = {
     'nav_title': 'Scriptor',
 
-    'color_primary': 'black',
+    'color_primary': 'blue',
     'color_accent': 'grey',
 
     'repo_url': 'https://github.com/Miksus/scriptor/',
@@ -121,7 +121,7 @@ html_theme_options = {
     "css_minify": True,
 
     "heroes": {
-        "index": "Advanced email box manipulation library.",
+        "index": "Library to run command-line programs from Python.",
     },
     "nav_links": [
     ],
