@@ -3,9 +3,14 @@ import subprocess
 from io import BytesIO, StringIO
 from copy import copy
 from typing import Callable, Iterable, Tuple, Union, ByteString
-from typing import Any, Dict, List, Literal
+from typing import Any, Dict, List
 from .runner import run_process_sync, run_process_async, run_process_iter, start_process, start_process_async
 from .utils import to_bytes, to_string
+
+try:
+    from typing import Literal
+except ImportError: # pragma: no cover
+    from typing_extensions import Literal
 
 class Input:
     "Stdin for a program"
