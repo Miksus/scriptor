@@ -98,15 +98,15 @@ async def test_error(tmpdir, sync):
     assert exc.returncode == 1
 
 @param_async
-async def test_kwargs_long(tmpdir, sync):
+async def test_kwargs_short(tmpdir, sync):
     py_file = tmpdir.join("myfile.py")
     py_file.write(dedent("""
         import sys
-        assert sys.argv[1:] == ["--report_date", "2022-01-01"]
+        assert sys.argv[1:] == ["-report_date", "2022-01-01"]
         print("Success")
         """
     ))
-    python = Program(sys.executable)
+    python = Program(sys.executable, arg_form="short")
     if sync:
         output = python(py_file, report_date="2022-01-01")
     else:
@@ -114,20 +114,54 @@ async def test_kwargs_long(tmpdir, sync):
     assert output == "Success"
 
 @param_async
-async def test_kwargs_short(tmpdir, sync):
+async def test_kwargs_long(tmpdir, sync):
     py_file = tmpdir.join("myfile.py")
     py_file.write(dedent("""
         import sys
-        assert sys.argv[1:] == ["-rd", "2022-01-01"]
+        assert sys.argv[1:] == ["--rd", "2022-01-01"]
+        print("Success")
+        """
+    ))
+
+    python = Program(sys.executable, arg_form="long")
+    if sync:
+        output = python(py_file, rd="2022-01-01")
+    else:
+        output = await python.call_async(py_file, rd="2022-01-01")
+    assert output == "Success"
+
+@param_async
+async def test_kwargs_auto(tmpdir, sync):
+    py_file = tmpdir.join("myfile.py")
+    py_file.write(dedent("""
+        import sys
+        assert sys.argv[1:] == ["-rd", "2022-01-01", "--report_date", "2022-11-11"]
         print("Success")
         """
     ))
 
     python = Program(sys.executable)
     if sync:
-        output = python(py_file, rd="2022-01-01")
+        output = python(py_file, rd="2022-01-01", report_date="2022-11-11")
     else:
-        output = await python.call_async(py_file, rd="2022-01-01")
+        output = await python.call_async(py_file, rd="2022-01-01", report_date="2022-11-11")
+    assert output == "Success"
+
+@param_async
+async def test_kwargs_set(tmpdir, sync):
+    py_file = tmpdir.join("myfile.py")
+    py_file.write(dedent("""
+        import sys
+        assert sys.argv[1:] == ["--rd", "2022-01-01", "-report_date", "2022-11-11"]
+        print("Success")
+        """
+    ))
+
+    python = Program(sys.executable)
+    if sync:
+        output = python(py_file, **{'--rd': "2022-01-01", '-report_date': "2022-11-11"})
+    else:
+        output = await python.call_async(py_file, **{'--rd': "2022-01-01", '-report_date': "2022-11-11"})
     assert output == "Success"
 
 @param_async

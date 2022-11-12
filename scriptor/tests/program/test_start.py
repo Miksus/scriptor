@@ -197,3 +197,22 @@ async def test_input_write(tmpdir, sync):
 
     assert process.finished
     assert output == "Hello world"
+
+@param_async
+@pytest.mark.parametrize("how", ['kill', 'terminate', 'signal'])
+async def test_process_attrs(tmpdir, sync, how):
+
+    py_file = tmpdir.join("myfile.py")
+    py_file.write(dedent("""
+        import time
+        time.sleep(5)
+        """
+    ))
+
+    python = Program(sys.executable)
+    process = python.start(py_file) if sync else await python.start_async(py_file)
+
+    assert repr(process)
+    assert process.stdin
+    assert process.stdout
+    assert process.stderr
