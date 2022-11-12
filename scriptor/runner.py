@@ -1,76 +1,76 @@
+from abc import abstractmethod
 import asyncio
+from typing import Union, Generator
 import subprocess
 
-DEFAULT_KWARGS = {
-    'stdout': subprocess.PIPE,
-    'stderr': subprocess.PIPE,
-    'text': True
-}
+from .process import ProcessError, Process, AsyncProcess, _raise_for_error
 
 class Runner:
     "Command-line runner"
 
-    def __init__(self):
+    def __init__(self, output=str):
         self.kwargs = {
             'stdin': subprocess.PIPE,
             'stdout': subprocess.PIPE,
             'stderr': subprocess.PIPE,
-            'text': True
         }
+        self.output = output
 
-    def run_process_sync(self, cmd, stdin=None, timeout=None, **kwargs):
+    def start_program(self, cmd, input=None, timeout=None, **kwargs) -> Process:
+        "Start the process"
         kwds = self.kwargs.copy()
         kwds.update(kwargs)
+        proc = Process(subprocess.Popen(cmd, **kwds), cmd=cmd)
+        if input is not None:
+            proc.write(input)
+        return proc
 
-        pipe = subprocess.Popen(cmd, **kwds)
-        try:
-            outs, errs = pipe.communicate(input=stdin, timeout=timeout)
-        except subprocess.TimeoutExpired:
-            # https://docs.python.org/3.3/library/subprocess.html#subprocess.Popen.communicate
-            pipe.kill()
-            outs, errs = pipe.communicate()
-            raise
-        self._raise_for_error(pipe, errs)
-        return outs
-
-    async def run_process_async(self, cmd, stdin=None, timeout=None, **kwargs):
+    async def start_program_async(self, cmd, input=None, timeout=None, **kwargs) -> AsyncProcess:
+        "Start the process"
         kwds = self.kwargs.copy()
-        kwds.pop("text") # asyncio.Process does not accept text for some reason
+        kwds.pop("text", None) # asyncio.Process does not accept text for some reason
+        #kwds.pop("stdin", None)
         kwds.update(kwargs)
 
-        pipe = await asyncio.create_subprocess_exec(*cmd, stdin=stdin, **kwds)
-        await asyncio.wait_for(pipe.wait(), timeout=timeout)
-        self._raise_for_error(pipe)
-        out = await pipe.stdout.read()
-        if hasattr(out, "decode"):
-            out = out.decode("utf-8", errors="ignore")
+        proc = AsyncProcess(
+            await asyncio.create_subprocess_exec(*cmd, **kwds), 
+            cmd=cmd
+        )
+        if input is not None:
+            proc.write(input)
+        return proc
+
+    def run_process_sync(self, cmd, input=None, timeout=None, **kwargs) -> bytes:
+        "Run process and return the output"
+        kwds = self.kwargs.copy()
+        kwds.pop("stdin", None)
+        kwds.update(kwargs)
+
+        proc = subprocess.run(cmd, input=input, timeout=timeout, **kwds)
+        _raise_for_error(proc.returncode, cmd=cmd, stdout=proc.stdout, stderr=proc.stderr)
+        return proc.stdout
+
+    async def run_process_async(self, cmd, input=None, timeout=None, **kwargs) -> bytes:
+        "Run process async"
+        proc = await self.start_program_async(cmd, input=input, **kwargs)
+        await asyncio.wait_for(proc.wait(), timeout=timeout)
+
+        await proc.raise_for_return()
+        out = await proc.read_bytes()
+
         return out
 
-    def run_process_iter(self, cmd, stdin=None, **kwargs):
-        kwds = self.kwargs.copy()
-        kwds.update(kwargs)
-        pipe = subprocess.Popen(cmd, **kwds)
-        if stdin is not None:
-            self._write_stdin(pipe, stdin)
+    def run_process_iter(self, cmd, input=None, **kwargs) -> Generator[bytes, None, None]:
+        "Run and iterate the process output"
+        proc = self.start_program(cmd, input=input, **kwargs)
 
         while True:
-            line = pipe.stdout.readline()
+            line = proc.stdout.readline()
             if line in (b'', ''):
                 break
             yield line
-        pipe.stdout.close()
-        self._raise_for_error(pipe)
-
-    def _raise_for_error(self, popen:subprocess.Popen, errs=None):
-        while popen.returncode is None:
-            popen.wait()
-        return_code = popen.returncode
-        if return_code != 0:
-            if errs is None:
-                errs = popen.stderr.read()
-            if hasattr(errs, "decode"):
-                errs = errs.decode("utf-8", errors="ignore")
-            raise OSError(f"Failed running command ({return_code}): \n{errs}")
+        proc.stdout.close()
+        _raise_for_error(proc.returncode, cmd=cmd, stdout=proc.stdout, stderr=proc.stderr)
 
     def _write_stdin(self, pipe:subprocess.Popen, stdin):
         try:
@@ -84,3 +84,5 @@ DEFAULT_RUNNER = Runner()
 run_process_sync = DEFAULT_RUNNER.run_process_sync
 run_process_async = DEFAULT_RUNNER.run_process_async
 run_process_iter = DEFAULT_RUNNER.run_process_iter
+start_process = DEFAULT_RUNNER.start_program
+start_process_async = DEFAULT_RUNNER.start_program_async

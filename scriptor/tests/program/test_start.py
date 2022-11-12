@@ -1,0 +1,117 @@
+import asyncio
+import io
+import time
+import sys
+import platform
+from textwrap import dedent
+
+import pytest
+from scriptor.process import Process, AsyncProcess, ProcessError
+from scriptor.program import Program, Input
+
+def param_async(func):
+    mark_async = pytest.mark.asyncio
+    mark_params = pytest.mark.parametrize('sync', [pytest.param(True, id="sync"), pytest.param(False, id="async")])
+
+    return mark_async(mark_params(func))
+
+@param_async
+async def test_arg(sync):
+    python = Program(sys.executable)
+    version = platform.python_version()
+    process = python.start("-V") if sync else await python.start_async("-V")
+    process.wait()
+    output = process.read() if sync else await process.read()
+    assert output == f"Python {version}"
+
+@param_async
+async def test_success(tmpdir, sync):
+    py_file = tmpdir.join("myfile.py")
+    py_file.write(dedent("""
+        ...
+        """
+    ))
+
+    python = Program(sys.executable)
+    process = python.start(py_file) if sync else await python.start_async(py_file)
+    assert isinstance(process, Process) if sync else isinstance(process, AsyncProcess)
+
+    process.wait() if sync else await process.wait()
+    assert process.returncode == 0
+
+    output = process.read() if sync else await process.read()
+    assert output is None
+
+@param_async
+async def test_success_output(tmpdir, sync):
+    py_file = tmpdir.join("myfile.py")
+    py_file.write(dedent("""
+        print("Hello")
+        print("world")
+        """
+    ))
+
+    python = Program(sys.executable)
+    process = python.start(py_file) if sync else await python.start_async(py_file)
+
+    process.wait() if sync else await process.wait()
+    output = process.read() if sync else await process.read()
+    assert process.returncode == 0
+    assert output == "Hello\nworld"
+
+@param_async
+async def test_success_finish(tmpdir, sync):
+    py_file = tmpdir.join("myfile.py")
+    py_file.write(dedent("""
+        ...
+        """
+    ))
+
+    python = Program(sys.executable)
+    process = python.start(py_file) if sync else await python.start_async(py_file)
+    while process.running:
+        assert process.returncode is None
+        if sync:
+            time.sleep(0.01)
+        else:
+            await asyncio.sleep(0.01)
+    assert process.returncode == 0
+
+@param_async
+async def test_input(tmpdir, sync):
+
+    py_file = tmpdir.join("myfile.py")
+    py_file.write(dedent("""
+        i = input()
+        assert i == "Hello"
+        print("Hello world")
+        """
+    ))
+    python = Program(sys.executable)
+    process = python.start(py_file, Input('Hello')) if sync else await python.start_async(py_file, Input('Hello'))
+
+    process.wait() if sync else await process.wait()
+    output = process.read() if sync else await process.read()
+
+    assert process.finished
+    assert output == "Hello world"
+
+@param_async
+async def test_input_write(tmpdir, sync):
+
+    py_file = tmpdir.join("myfile.py")
+    py_file.write(dedent("""
+        i = input()
+        assert i == "Hello"
+        print("Hello world")
+        """
+    ))
+    python = Program(sys.executable)
+    process = python.start(py_file) if sync else await python.start_async(py_file)
+    process.write(b'Hello')
+
+    process.wait() if sync else await process.wait()
+    output = process.read() if sync else await process.read()
+
+    assert process.finished
+    assert output == "Hello world"

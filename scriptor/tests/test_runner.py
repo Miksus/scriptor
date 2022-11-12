@@ -8,8 +8,12 @@ import pytest
 from scriptor.runner import run_process_sync, run_process_iter, run_process_async
 
 def test_run_sync():
-    output = run_process_sync([sys.executable, "-V"])
-    assert output.startswith("Python 3")
+    code = dedent("""
+        print('Hello')
+        print('world')
+        """)
+    output = run_process_sync([sys.executable, "-c", code])
+    assert output == b"Hello\r\nworld\r\n"
 
 def test_run_iter(tmpdir):
     code = dedent("""
@@ -19,7 +23,7 @@ def test_run_iter(tmpdir):
     lines = []
     for line in run_process_iter([sys.executable, "-c", code]):
         lines.append(line)
-    assert lines == ["Hello\n", "world\n"]
+    assert lines == [b"Hello\r\n", b"world\r\n"]
 
 @pytest.mark.asyncio
 async def test_run_async(tmpdir):
@@ -28,7 +32,7 @@ async def test_run_async(tmpdir):
         print('world')
         """)
     output = await run_process_async([sys.executable, "-c", code])
-    assert output == "Hello\r\nworld\r\n"
+    assert output == b"Hello\r\nworld\r\n"
 
 @pytest.mark.asyncio
 async def test_run_async_timeout(tmpdir):
@@ -40,3 +44,26 @@ async def test_run_async_timeout(tmpdir):
         """)
     with pytest.raises(asyncio.exceptions.TimeoutError):
         output = await run_process_async([sys.executable, "-c", code], timeout=0.1)
+
+def test_run_iter_running(tmpdir):
+    # Check the program is still running when
+    # iter returns rows
+    file = tmpdir.join("myfile.py")
+    file.write(dedent("""
+        from time import sleep
+        from time import time
+        print(time())
+        sleep(0.1)
+        print(time())
+        sleep(0.1)
+        print(time())
+        """))
+
+    obs_count = 0
+    last_check = time()
+    for obs in run_process_iter([sys.executable, file]):
+        obs = float(obs.decode("UTF-8"))
+        assert obs > last_check
+        last_check = time()
+        obs_count += 1
+    assert obs_count == 3
