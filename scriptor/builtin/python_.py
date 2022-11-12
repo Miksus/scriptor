@@ -32,13 +32,13 @@ class Python(Program):
         return self("--help")
 
     @staticmethod
-    def _get_base_python(): # Prama: no cover
+    def _get_base_python():
         system = platform.system()
-        if system == 'Linux':
+        if system == 'Linux': # pragma: no cover
             return 'python3'
-        elif system == 'Windows':
+        elif system == 'Windows': # pragma: no cover
             return 'python'
-        else:
+        else: # pragma: no cover
             return 'python3'
 
 python = Python(Python._get_base_python())
