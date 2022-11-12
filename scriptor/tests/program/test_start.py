@@ -35,6 +35,34 @@ async def test_arg(sync):
     assert output == f"Python {version}"
 
 @param_async
+async def test_communicate(tmpdir, sync):
+    py_file = tmpdir.join("myfile.py")
+    py_file.write(dedent("""
+        i = input()
+        assert i == "Hello"
+        print("world")
+        """
+    ))
+
+    python = Program(sys.executable)
+    process = python.start(py_file) if sync else await python.start_async(py_file)
+    if sync:
+        stdout, stderr = process.communicate(b"Hello")
+    else:
+        stdout, stderr = await process.communicate(b"Hello")
+    assert process.returncode == 0
+    assert stdout == b"world\r\n" if IS_WINDOWS else "world\n"
+    assert stderr == b""
+
+    # Check the stdout and stderr are still found
+    if sync:
+        assert process.get_stdout() == b"world\r\n" if IS_WINDOWS else "world\n"
+        assert process.get_stderr() == b""
+    else:
+        assert await process.get_stdout() == b"world\r\n" if IS_WINDOWS else "world\n"
+        assert await process.get_stderr() == b""
+
+@param_async
 async def test_error(tmpdir, sync):
     py_file = tmpdir.join("myfile.py")
     py_file.write(dedent("""

@@ -95,10 +95,13 @@ class Process(BaseProcess):
         return self._proc.returncode
 
     def wait(self):
-        self._proc.wait()
+        return self._proc.wait()
 
-    def communicate(self, input=None):
-        self._proc.communicate(input=input)
+    def communicate(self, *args, **kwargs):
+        stdout, stderr = self._proc.communicate(*args, **kwargs)
+        self._stdout = stdout
+        self._stderr = stderr
+        return stdout, stderr
 
     def read(self):
         stdout = self.get_stdout()
@@ -134,10 +137,13 @@ class AsyncProcess(BaseProcess):
         super().__init__(*args, **kwargs)
 
     async def wait(self):
-        await self._proc.wait()
+        return await self._proc.wait()
 
-    async def communicate(self, input=None):
-        self._proc.communicate(input=input)
+    async def communicate(self, *args, **kwargs):
+        stdout, stderr = await self._proc.communicate(*args, **kwargs)
+        self._stdout = stdout
+        self._stderr = stderr
+        return stdout, stderr
 
     async def read(self):
         stdout = await self.get_stdout()
