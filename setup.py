@@ -31,7 +31,7 @@ setup(
         "Intended Audience :: Developers",
     ],
     include_package_data=True, # for MANIFEST.in
-    python_requires='>=3.8.0',
+    python_requires='>=3.7.0',
 
     install_requires = [],
 )
