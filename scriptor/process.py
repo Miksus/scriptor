@@ -34,6 +34,8 @@ class ProcessError(subprocess.CalledProcessError):
         return self.stderr
 
 class BaseProcess:
+    _stdout: bytes
+    _stderr: bytes
 
     def __init__(self, proc, cmd=None, input_parser=None, output_parser=None):
         self._proc = proc
@@ -41,6 +43,9 @@ class BaseProcess:
 
         self.input_parser = input_parser
         self.output_parser = output_parser
+
+        self._stdout = None
+        self._stderr = None
 
     def write(self, s):
         parser = self.input_parser
@@ -108,31 +113,37 @@ class Process(BaseProcess):
         self._proc.communicate(input=input)
 
     def read(self):
-        stdout = self._proc.stdout.read()
+        stdout = self.get_stdout()
         return self._parse_output(stdout)
-
-    def read_err(self):
-        stderr = self._proc.stderr.read()
-        return stderr
 
     def raise_for_return(self):
         _raise_for_error(
             returncode=self._proc.returncode, 
             cmd=self.cmd,
-            stdout=self._proc.stdout,
-            stderr=self._proc.stderr,
+            stdout=self.get_stdout(),
+            stderr=self.get_stderr(),
         )
+
+    def get_stdout(self):
+        stream = self._proc.stdout
+        consumed = self._stdout is not None
+        if not consumed:
+            self._stdout = stream.read()
+        return self._stdout
+
+    def get_stderr(self):
+        stream = self._proc.stderr
+        consumed = self._stderr is not None
+        if not consumed:
+            self._stderr = stream.read()
+        return self._stderr
 
 
 class AsyncProcess(BaseProcess):
     _proc: asyncio.subprocess.Process
-    _stdout: bytes
-    _stderr: bytes
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._stdout = None
-        self._stderr = None
 
     async def wait(self):
         await self._proc.wait()
@@ -141,32 +152,25 @@ class AsyncProcess(BaseProcess):
         self._proc.communicate(input=input)
 
     async def read(self):
-        stdout = await self._get_stdout()
+        stdout = await self.get_stdout()
         return self._parse_output(stdout)
-
-    async def read_bytes(self):
-        return await self._get_stdout()
-
-    async def read_err(self):
-        stderr = self._get_stderr()
-        return stderr
 
     async def raise_for_return(self):
         _raise_for_error(
             returncode=self._proc.returncode, 
             cmd=self.cmd,
-            stdout=await self._get_stdout(),
-            stderr=await self._get_stderr(),
+            stdout=await self.get_stdout(),
+            stderr=await self.get_stderr(),
         )
 
-    async def _get_stdout(self):
+    async def get_stdout(self):
         stream = self._proc.stdout
         consumed = self._stdout is not None
         if not consumed:
             self._stdout = await stream.read()
         return self._stdout
 
-    async def _get_stderr(self):
+    async def get_stderr(self):
         stream = self._proc.stderr
         consumed = self._stderr is not None
         if not consumed:

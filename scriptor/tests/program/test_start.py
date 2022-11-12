@@ -24,6 +24,32 @@ async def test_arg(sync):
     output = process.read() if sync else await process.read()
     assert output == f"Python {version}"
 
+    # Test repeated read
+    output = process.read() if sync else await process.read()
+    assert output == f"Python {version}"
+
+@param_async
+async def test_error(tmpdir, sync):
+    py_file = tmpdir.join("myfile.py")
+    py_file.write(dedent("""
+        raise RuntimeError("Oops")
+        """
+    ))
+
+    python = Program(sys.executable)
+    process = python.start(py_file) if sync else await python.start_async(py_file)
+    assert isinstance(process, Process) if sync else isinstance(process, AsyncProcess)
+
+    process.wait() if sync else await process.wait()
+    assert process.returncode == 1
+
+    # Test stdout and stderr
+    stdout = process.get_stdout() if sync else await process.get_stdout()
+    assert stdout == b""
+
+    stderr = process.get_stderr() if sync else await process.get_stderr()
+    assert stderr.decode("UTF-8").endswith("RuntimeError: Oops\r\n")
+
 @param_async
 async def test_success(tmpdir, sync):
     py_file = tmpdir.join("myfile.py")
@@ -39,6 +65,10 @@ async def test_success(tmpdir, sync):
     process.wait() if sync else await process.wait()
     assert process.returncode == 0
 
+    output = process.read() if sync else await process.read()
+    assert output is None
+
+    # Test repeated read
     output = process.read() if sync else await process.read()
     assert output is None
 
@@ -58,6 +88,18 @@ async def test_success_output(tmpdir, sync):
     output = process.read() if sync else await process.read()
     assert process.returncode == 0
     assert output == "Hello\nworld"
+
+    # Test repeated read
+    output = process.read() if sync else await process.read()
+    assert process.returncode == 0
+    assert output == "Hello\nworld"
+
+    # Test stdout and stderr
+    stdout = process.get_stdout() if sync else await process.get_stdout()
+    assert stdout == b"Hello\r\nworld\r\n"
+
+    stderr = process.get_stderr() if sync else await process.get_stderr()
+    assert stderr == b""
 
 @param_async
 async def test_success_finish(tmpdir, sync):

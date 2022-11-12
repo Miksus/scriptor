@@ -56,7 +56,7 @@ class Runner:
         await asyncio.wait_for(proc.wait(), timeout=timeout)
 
         await proc.raise_for_return()
-        out = await proc.read_bytes()
+        out = await proc.get_stdout()
 
         return out
 
