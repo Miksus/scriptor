@@ -40,7 +40,7 @@ jobs:
         
     - name: Run test suite
       run: |
-        python -m pytest --cov=scriptor --cov-report=xml rocketry/test
+        python -m pytest --cov=scriptor --cov-report=xml scriptor/tests
         
     - name: Upload test coverage
       uses: codecov/codecov-action@v2
