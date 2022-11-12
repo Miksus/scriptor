@@ -21,7 +21,7 @@ async def test_arg(sync):
     if sync:
         output = python("-V")
     else:
-        output = await python.run_async("-V")
+        output = await python.call_async("-V")
     assert output == f"Python {version}"
 
 @param_async
@@ -36,7 +36,7 @@ async def test_success(tmpdir, sync):
     if sync:
         output = python(py_file)
     else:
-        output = await python.run_async(py_file)
+        output = await python.call_async(py_file)
     assert output is None
 
 @param_async
@@ -54,7 +54,7 @@ async def test_success_output(tmpdir, how, sync):
     else:
         python = Program(sys.executable)
 
-    output = python(py_file) if sync else await python.run_async(py_file)
+    output = python(py_file) if sync else await python.call_async(py_file)
     assert output == "Hello\nworld"
 
 @param_async
@@ -69,7 +69,7 @@ async def test_success_output_bytes(tmpdir, how, sync):
 
     output_type = 'bytes' if how == "string" else bytes
     python = Program(sys.executable, output_type=output_type)
-    output = python(py_file) if sync else await python.run_async(py_file)
+    output = python(py_file) if sync else await python.call_async(py_file)
     assert output == b"Hello\r\nworld\r\n"
 
 @param_async
@@ -84,7 +84,7 @@ async def test_error(tmpdir, sync):
 
     python = Program(sys.executable)
     with pytest.raises(ProcessError) as exc_info:
-        python(py_file) if sync else await python.run_async(py_file)
+        python(py_file) if sync else await python.call_async(py_file)
     exc = exc_info.value
     tb = exc_info.tb
     assert str(exc).endswith('raise RuntimeError("Oops")\nRuntimeError: Oops')
@@ -105,7 +105,7 @@ async def test_kwargs_long(tmpdir, sync):
     if sync:
         output = python(py_file, report_date="2022-01-01")
     else:
-        output = await python.run_async(py_file, report_date="2022-01-01")
+        output = await python.call_async(py_file, report_date="2022-01-01")
     assert output == "Success"
 
 @param_async
@@ -122,7 +122,7 @@ async def test_kwargs_short(tmpdir, sync):
     if sync:
         output = python(py_file, rd="2022-01-01")
     else:
-        output = await python.run_async(py_file, rd="2022-01-01")
+        output = await python.call_async(py_file, rd="2022-01-01")
     assert output == "Success"
 
 @param_async
@@ -135,7 +135,7 @@ async def test_custom_output(tmpdir, sync):
 
     python = Program(sys.executable, output_parser=lambda x: json.loads(x))
 
-    output = python(py_file) if sync else await python.run_async(py_file)
+    output = python(py_file) if sync else await python.call_async(py_file)
     assert output == {"name": "John", "age": 30, "car": None}
 
 @param_async
@@ -149,7 +149,7 @@ async def test_custom_output_bytes(tmpdir, sync):
         """
     ))
     python = Program(sys.executable, output_parser=parse_bytes, output_type=bytes)
-    output = python(py_file) if sync else await python.run_async(py_file)
+    output = python(py_file) if sync else await python.call_async(py_file)
     assert output == b"Hello world\r\n"
 
 @param_async
@@ -168,5 +168,5 @@ async def test_input(tmpdir, sync, buffer):
     python = Program(sys.executable, output_parser=parse_bytes, output_type=bytes)
 
     buff = Input(b'Hello') if buffer == "bytes" else Input('Hello')
-    output = python(py_file, buff) if sync else await python.run_async(py_file, buff)
+    output = python(py_file, buff) if sync else await python.call_async(py_file, buff)
     assert output == b"Hello world\r\n"

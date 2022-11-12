@@ -39,7 +39,7 @@ class BaseProgram:
         output = run_process_sync(cmd, input=stdin, **self.get_process_kwargs())
         return self.parse_output(output)
 
-    async def run_async(self, *args, **kwargs):
+    async def async(self, *args, **kwargs):
         cmd, stdin = self.get_command(*args, **kwargs)
         output = await run_process_async(cmd, input=stdin, **self.get_process_kwargs())
         return self.parse_output(output)

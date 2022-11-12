@@ -35,7 +35,7 @@ async def test_run(tmpdir):
 
     python = Program(sys.executable)
 
-    task_run = asyncio.create_task(python.run_async(py_file))
+    task_run = asyncio.create_task(python.call_async(py_file))
     task_check = asyncio.create_task(do_other())
 
     output = await task_run
