@@ -13,11 +13,8 @@ def test_python(tmpdir):
         """))
 
     assert current.run_code("print('Hello world')") == 'Hello world'
-
     assert current.version.startswith("Python 3.")
     assert current.full_version.startswith("Python 3.")
-
     assert current.run_script(py_file) == "Hello world"
-
-
     assert current.use(cwd=tmpdir).run_module("files.myscript") == "Hello world"
+    assert current.help.startswith("usage: python [option] ... [-c cmd | -m mod | file | -] [arg] ...")
