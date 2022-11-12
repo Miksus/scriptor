@@ -19,4 +19,4 @@ def test_python_run(tmpdir):
 def test_python_attrs():
     assert current.version.startswith("Python 3.")
     assert current.full_version.startswith("Python 3.")
-    assert current.help.startswith("usage: python [option] ... [-c cmd | -m mod | file | -] [arg] ...")
+    assert current.help.startswith("usage: ")
