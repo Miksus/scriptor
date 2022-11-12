@@ -1,20 +1,31 @@
-import io
-import json
 import sys
-import platform
 from textwrap import dedent
 
 import pytest
 from scriptor.process import ProcessError
 from scriptor import Program, BaseProgram
 
-def param_async(func):
-    mark_async = pytest.mark.asyncio
-    mark_params = pytest.mark.parametrize('sync', [pytest.param(True, id="sync"), pytest.param(False, id="async")])
+def test_use_cwd(tmpdir):
+    tmpdir.mkdir("mydir")
+    py_file = tmpdir.join("mydir/myfile.py")
+    py_file.write(dedent("""
+        import os
+        from pathlib import Path
+        assert Path(os.getcwd()).name == "mydir"
+        print("Hello")
+        """
+    ))
 
-    return mark_async(mark_params(func))
+    python = Program(sys.executable)
+    python_in_dir = python.use(cwd=tmpdir / "mydir")
+    with pytest.raises(ProcessError):
+        python(py_file)
 
+    output = python_in_dir(py_file)
+    assert output == "Hello"
 
+    assert python.cwd is None
+    assert python_in_dir.cwd == tmpdir / "mydir"
 def test_args_with_init(tmpdir):
     py_file = tmpdir.join("myfile.py")
     py_file.write(dedent("""
