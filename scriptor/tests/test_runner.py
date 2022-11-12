@@ -57,6 +57,7 @@ async def test_run_async_timeout(tmpdir):
     with pytest.raises(asyncio.exceptions.TimeoutError):
         output = await run_process_async([sys.executable, "-c", code], timeout=0.1)
 
+@pytest.mark.skipif(not IS_WINDOWS, reason="For some reason Linux iter after the program")
 def test_run_iter_running(tmpdir):
     # Check the program is still running when
     # iter returns rows
