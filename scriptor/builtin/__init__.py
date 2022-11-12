@@ -1,5 +1,5 @@
 from .python_ import (
     Python,
-    current,
-    python
+    current as current_python,
+    python as base_python
 )

@@ -1,9 +1,9 @@
 import sys
 from textwrap import dedent
-from scriptor.builtin import current, python
+from scriptor.builtin import current_python, base_python, Python
 
 def test_current():
-    assert current.program == (sys.executable,)
+    assert current_python.program == (sys.executable,)
 
 def test_python_run(tmpdir):
     tmpdir.mkdir("files")
@@ -12,11 +12,11 @@ def test_python_run(tmpdir):
         print("Hello world")
         """))
 
-    assert current.run_code("print('Hello world')") == 'Hello world'
-    assert current.run_script(py_file) == "Hello world"
-    assert current.use(cwd=tmpdir).run_module("files.myscript") == "Hello world"
+    assert current_python.run_code("print('Hello world')") == 'Hello world'
+    assert current_python.run_script(py_file) == "Hello world"
+    assert current_python.use(cwd=tmpdir).run_module("files.myscript") == "Hello world"
 
 def test_python_attrs():
-    assert current.version.startswith("Python 3.")
-    assert current.full_version.startswith("Python 3.")
-    assert current.help.startswith("usage: ")
+    assert current_python.version.startswith("Python 3.")
+    assert current_python.full_version.startswith("Python 3.")
+    assert current_python.help.startswith("usage: ")
