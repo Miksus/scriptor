@@ -2,10 +2,13 @@ import asyncio
 from textwrap import dedent
 import sys
 from time import time
+import platform
 
 import pytest
 
 from scriptor.runner import run_process_sync, run_process_iter, run_process_async
+
+IS_WINDOWS = platform.system() == "Windows"
 
 def test_run_sync():
     code = dedent("""
@@ -13,7 +16,10 @@ def test_run_sync():
         print('world')
         """)
     output = run_process_sync([sys.executable, "-c", code])
-    assert output == b"Hello\r\nworld\r\n"
+    if IS_WINDOWS:
+        assert output == b"Hello\r\nworld\r\n"
+    else:
+        assert output == b"Hello\nworld\n"
 
 def test_run_iter(tmpdir):
     code = dedent("""
@@ -23,7 +29,10 @@ def test_run_iter(tmpdir):
     lines = []
     for line in run_process_iter([sys.executable, "-c", code]):
         lines.append(line)
-    assert lines == [b"Hello\r\n", b"world\r\n"]
+    if IS_WINDOWS:
+        assert lines == [b"Hello\r\n", b"world\r\n"]
+    else:
+        assert lines == [b"Hello\n", b"world\n"]
 
 @pytest.mark.asyncio
 async def test_run_async(tmpdir):
@@ -32,7 +41,10 @@ async def test_run_async(tmpdir):
         print('world')
         """)
     output = await run_process_async([sys.executable, "-c", code])
-    assert output == b"Hello\r\nworld\r\n"
+    if IS_WINDOWS:
+        assert output == b"Hello\r\nworld\r\n"
+    else:
+        assert output == b"Hello\nworld\n"
 
 @pytest.mark.asyncio
 async def test_run_async_timeout(tmpdir):
