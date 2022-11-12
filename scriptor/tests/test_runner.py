@@ -74,6 +74,7 @@ def test_run_iter_running(tmpdir):
     obs_count = 0
     last_check = time()
     for obs in run_process_iter([sys.executable, file]):
+        print("Check:", last_check)
         print("Observation:", obs)
         obs = float(obs.decode("UTF-8"))
         assert obs > last_check
