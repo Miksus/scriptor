@@ -5,18 +5,6 @@ from abc import abstractmethod
 from typing import Any, Union
 from .utils import to_string, to_bytes
 
-def _raise_for_error(proc:Union[subprocess.Popen, asyncio.subprocess.Process], cmd):
-    returncode = proc.returncode
-    if returncode:
-        stdout = to_string(proc.stdout)
-        stderr = to_string(proc.stderr)
-        raise ProcessError(
-            returncode=returncode, 
-            cmd=cmd,
-            output=stdout,
-            stderr=stderr,
-        )
-
 def _raise_for_error(returncode, cmd, stdout, stderr):
     if returncode:
         stdout = to_string(stdout)
@@ -107,10 +95,13 @@ class Process(BaseProcess):
         return self._proc.returncode
 
     def wait(self):
-        self._proc.wait()
+        return self._proc.wait()
 
-    def communicate(self, input=None):
-        self._proc.communicate(input=input)
+    def communicate(self, *args, **kwargs):
+        stdout, stderr = self._proc.communicate(*args, **kwargs)
+        self._stdout = stdout
+        self._stderr = stderr
+        return stdout, stderr
 
     def read(self):
         stdout = self.get_stdout()
@@ -146,10 +137,13 @@ class AsyncProcess(BaseProcess):
         super().__init__(*args, **kwargs)
 
     async def wait(self):
-        await self._proc.wait()
+        return await self._proc.wait()
 
-    async def communicate(self, input=None):
-        self._proc.communicate(input=input)
+    async def communicate(self, *args, **kwargs):
+        stdout, stderr = await self._proc.communicate(*args, **kwargs)
+        self._stdout = stdout
+        self._stderr = stderr
+        return stdout, stderr
 
     async def read(self):
         stdout = await self.get_stdout()
