@@ -26,6 +26,12 @@ def test_use_cwd(tmpdir):
 
     assert python.cwd is None
     assert python_in_dir.cwd == tmpdir / "mydir"
+
+def test_use_not_found():
+    python = Program(sys.executable)
+    with pytest.raises(AttributeError):
+        python.use(non_existent="value")
+
 def test_args_with_init(tmpdir):
     py_file = tmpdir.join("myfile.py")
     py_file.write(dedent("""
