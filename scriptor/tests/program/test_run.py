@@ -170,3 +170,29 @@ async def test_input(tmpdir, sync, buffer):
     buff = Input(b'Hello') if buffer == "bytes" else Input('Hello')
     output = python(py_file, buff) if sync else await python.call_async(py_file, buff)
     assert output == b"Hello world\r\n"
+
+@param_async
+@pytest.mark.parametrize("buffer", ["bytes", "string"])
+@pytest.mark.parametrize("cli_args", ["before", "after"])
+async def test_input_with_arg(tmpdir, sync, buffer, cli_args):
+    def parse_bytes(x):
+        assert isinstance(x, bytes)
+        return x
+    py_file = tmpdir.join("myfile.py")
+    py_file.write(dedent("""
+        import sys
+        args = sys.argv[1:]
+        i = input()
+        assert i == "Hello"
+        print(*args)
+        """
+    ))
+    python = Program(sys.executable, output_parser=parse_bytes, output_type=bytes)
+
+    buff = Input(b'Hello') if buffer == "bytes" else Input('Hello')
+    if cli_args == "before":
+        args = (py_file, 'Hello', 'world', buff)
+    else:
+        args = (py_file, buff, 'Hello', 'world')
+    output = python(*args) if sync else await python.call_async(*args)
+    assert output == b"Hello world\r\n"
