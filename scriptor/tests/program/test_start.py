@@ -149,15 +149,18 @@ async def test_interupt(tmpdir, sync, how):
     if how == "kill":
         process.kill()
         process.wait() if sync else await process.wait()
-        assert process.returncode == 1
+        assert process.returncode != 0
     elif how == "terminate":
         process.terminate()
         process.wait() if sync else await process.wait()
-        assert process.returncode == 1
+        assert process.returncode != 0
     elif how == "signal":
         process.send_signal(signal.SIGTERM)
         process.wait() if sync else await process.wait()
-        assert process.returncode == 1
+        assert process.returncode != 0
+        
+    # Check the process is not running either
+    assert process.returncode is not None
 
 @param_async
 async def test_input(tmpdir, sync):
