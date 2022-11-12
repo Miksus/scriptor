@@ -1,7 +1,7 @@
 import asyncio
 from textwrap import dedent
 import sys
-from time import time
+from time import time, sleep
 import platform
 
 import pytest
@@ -74,6 +74,7 @@ def test_run_iter_running(tmpdir):
     obs_count = 0
     last_check = time()
     for obs in run_process_iter([sys.executable, file]):
+        print("Observation:", obs)
         obs = float(obs.decode("UTF-8"))
         assert obs > last_check
         last_check = time()

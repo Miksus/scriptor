@@ -22,7 +22,10 @@ async def test_arg(sync):
     python = Program(sys.executable)
     version = platform.python_version()
     process = python.start("-V") if sync else await python.start_async("-V")
-    process.wait()
+    if sync:
+        process.wait()
+    else:
+        await process.wait()
     output = process.read() if sync else await process.read()
     assert output == f"Python {version}"
 
