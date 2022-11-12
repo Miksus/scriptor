@@ -15,33 +15,35 @@ Why Scriptor?
 -------------
 
 Scriptor is a high-level abstraction for ``subprocess`` and ``async.subprocess``.
-Scriptor makes it easy to run and communicate with external programs. 
+Scriptor makes it easy to execute command-line programs from Python.
 
 Features:
 
 - High-level abstraction to run programs
-- Convenient program parametrization and output parsing
+- Pythonic program parametrization
 - Full async support
 
 A simple example:
 
 .. code-block:: python
 
-    from scriptor import Program
+    >>> from scriptor import Program
+    >>> python = Program('python3')
 
-    python = Program('python')
+    >>> # Run a program (and wait for finish)
+    >>> python('myscript.py')
 
-    # Run a program (and wait for finish)
-    program('myscript.py')
-
-You can also conveniently parametrize programs.
-This runs command ``myscript.py --report_date 2022-01-01``:
+You can also conveniently parametrize programs:
 
 .. code-block:: python
 
-    program('myscript.py', report_date="2022-01-01")
+    >>> # Run: python3 myscript.py --report_date 2022-01-01
+    >>> python('myscript.py', report_date="2022-01-01")
 
+You can create convenient interfaces to other programs
+with Scriptor. See: 
 
+- :ref:`Git interface <cookbook-git>`
 
 Interested?
 -----------

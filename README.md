@@ -1,6 +1,6 @@
 
 # Scriptor
-> Run programs with command-line interface with Python
+> Run command-line programs in Python
 
 ---
 
