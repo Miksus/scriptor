@@ -8,6 +8,8 @@ import pytest
 from scriptor.process import ProcessError
 from scriptor.program import Program, Input
 
+IS_WINDOWS = platform.system() == "Windows"
+
 def param_async(func):
     mark_async = pytest.mark.asyncio
     mark_params = pytest.mark.parametrize('sync', [pytest.param(True, id="sync"), pytest.param(False, id="async")])
@@ -70,7 +72,10 @@ async def test_success_output_bytes(tmpdir, how, sync):
     output_type = 'bytes' if how == "string" else bytes
     python = Program(sys.executable, output_type=output_type)
     output = python(py_file) if sync else await python.call_async(py_file)
-    assert output == b"Hello\r\nworld\r\n"
+    if IS_WINDOWS:
+        assert output == b"Hello\r\nworld\r\n"
+    else:
+        assert output == b"Hello\nworld\n"
 
 @param_async
 async def test_error(tmpdir, sync):
@@ -150,7 +155,10 @@ async def test_custom_output_bytes(tmpdir, sync):
     ))
     python = Program(sys.executable, output_parser=parse_bytes, output_type=bytes)
     output = python(py_file) if sync else await python.call_async(py_file)
-    assert output == b"Hello world\r\n"
+    if IS_WINDOWS:
+        assert output == b"Hello world\r\n"
+    else:
+        assert output == b"Hello world\n"
 
 @param_async
 @pytest.mark.parametrize("buffer", ["bytes", "string"])
@@ -169,7 +177,11 @@ async def test_input(tmpdir, sync, buffer):
 
     buff = Input(b'Hello') if buffer == "bytes" else Input('Hello')
     output = python(py_file, buff) if sync else await python.call_async(py_file, buff)
-    assert output == b"Hello world\r\n"
+
+    if IS_WINDOWS:
+        assert output == b"Hello world\r\n"
+    else:
+        assert output == b"Hello world\n"
 
 @param_async
 @pytest.mark.parametrize("buffer", ["bytes", "string"])
@@ -195,4 +207,8 @@ async def test_input_with_arg(tmpdir, sync, buffer, cli_args):
     else:
         args = (py_file, buff, 'Hello', 'world')
     output = python(*args) if sync else await python.call_async(*args)
-    assert output == b"Hello world\r\n"
+
+    if IS_WINDOWS:
+        assert output == b"Hello world\r\n"
+    else:
+        assert output == b"Hello world\n"
