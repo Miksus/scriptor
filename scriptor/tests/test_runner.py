@@ -9,6 +9,7 @@ import pytest
 from scriptor.runner import run_process_sync, run_process_iter, run_process_async
 
 IS_WINDOWS = platform.system() == "Windows"
+PY_VERSION = (sys.version_info.major, sys.version_info.minor)
 
 def test_run_sync():
     code = dedent("""
@@ -54,7 +55,11 @@ async def test_run_async_timeout(tmpdir):
         sleep(5)
         print('world')
         """)
-    with pytest.raises(asyncio.exceptions.TimeoutError):
+    if PY_VERSION == (3, 7):
+        exc = asyncio.TimeoutError
+    else:
+        exc = asyncio.exceptions.TimeoutError
+    with pytest.raises(exc):
         output = await run_process_async([sys.executable, "-c", code], timeout=0.1)
 
 @pytest.mark.skipif(not IS_WINDOWS, reason="For some reason Linux iter after the program")
