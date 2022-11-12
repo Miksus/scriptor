@@ -57,6 +57,8 @@ Install the package:
    :maxdepth: 2
    :caption: Contents:
 
+   tutorials/index
+   cookbook/index
    versions
 
 

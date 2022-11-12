@@ -102,7 +102,7 @@ html_sidebars = {
 html_theme_options = {
     'nav_title': 'Scriptor',
 
-    'color_primary': 'black',
+    'color_primary': 'blue',
     'color_accent': 'grey',
 
     'repo_url': 'https://github.com/Miksus/scriptor/',
