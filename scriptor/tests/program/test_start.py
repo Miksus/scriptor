@@ -61,6 +61,40 @@ async def test_error(tmpdir, sync):
         assert stderr_str.endswith("RuntimeError: Oops\n")
 
 @param_async
+async def test_error_raise(tmpdir, sync):
+    py_file = tmpdir.join("myfile.py")
+    py_file.write(dedent("""
+        raise RuntimeError("Oops")
+        """
+    ))
+
+    python = Program(sys.executable)
+    process = python.start(py_file) if sync else await python.start_async(py_file)
+    assert isinstance(process, Process) if sync else isinstance(process, AsyncProcess)
+
+    process.wait() if sync else await process.wait()
+    with pytest.raises(ProcessError) as exc_info:
+        if sync:
+            process.raise_for_return()
+        else:
+            await process.raise_for_return()
+    assert process.returncode == 1
+
+    error_message = str(exc_info.value)
+    assert error_message.endswith("RuntimeError: Oops")
+
+    # Test stdout and stderr are still there
+    stdout = process.get_stdout() if sync else await process.get_stdout()
+    assert stdout == b""
+
+    stderr = process.get_stderr() if sync else await process.get_stderr()
+    stderr_str = stderr.decode("UTF-8")
+    if IS_WINDOWS:
+        assert stderr_str.endswith("RuntimeError: Oops\r\n")
+    else:
+        assert stderr_str.endswith("RuntimeError: Oops\n")
+
+@param_async
 async def test_success(tmpdir, sync):
     py_file = tmpdir.join("myfile.py")
     py_file.write(dedent("""
@@ -158,7 +192,7 @@ async def test_interupt(tmpdir, sync, how):
         process.send_signal(signal.SIGTERM)
         process.wait() if sync else await process.wait()
         assert process.returncode != 0
-        
+
     # Check the process is not running either
     assert process.returncode is not None
 
