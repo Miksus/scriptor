@@ -1,5 +1,6 @@
 import asyncio
 import io
+import signal
 import time
 import sys
 import platform
@@ -130,6 +131,33 @@ async def test_success_finish(tmpdir, sync):
         else:
             await asyncio.sleep(0.01)
     assert process.returncode == 0
+
+@param_async
+@pytest.mark.parametrize("how", ['kill', 'terminate', 'signal'])
+async def test_interupt(tmpdir, sync, how):
+
+    py_file = tmpdir.join("myfile.py")
+    py_file.write(dedent("""
+        import time
+        time.sleep(5)
+        """
+    ))
+
+    python = Program(sys.executable)
+    process = python.start(py_file) if sync else await python.start_async(py_file)
+    
+    if how == "kill":
+        process.kill()
+        process.wait() if sync else await process.wait()
+        assert process.returncode == 1
+    elif how == "terminate":
+        process.terminate()
+        process.wait() if sync else await process.wait()
+        assert process.returncode == 1
+    elif how == "signal":
+        process.send_signal(signal.SIGTERM)
+        process.wait() if sync else await process.wait()
+        assert process.returncode == 1
 
 @param_async
 async def test_input(tmpdir, sync):
