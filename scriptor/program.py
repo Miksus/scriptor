@@ -81,7 +81,7 @@ class BaseProgram:
             if isinstance(arg, Input):
                 stdin = arg.read()
             else:
-                cmd.append(arg)
+                cmd.append(str(arg))
         return cmd, stdin
 
     def parse_kwargs(self, kwargs:Dict[str, Any]) -> Tuple[List[str], ByteString]:
