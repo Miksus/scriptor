@@ -72,13 +72,6 @@ class Runner:
         proc.stdout.close()
         _raise_for_error(proc.returncode, cmd=cmd, stdout=proc.stdout, stderr=proc.stderr)
 
-    def _write_stdin(self, pipe:subprocess.Popen, stdin):
-        try:
-            pipe.stdin.write(stdin)
-        except (BrokenPipeError, OSError):
-            # Popen._write_stdin also ignores these errors
-            pass
-
 DEFAULT_RUNNER = Runner()
 
 run_process_sync = DEFAULT_RUNNER.run_process_sync
