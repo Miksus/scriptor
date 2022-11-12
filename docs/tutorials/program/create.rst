@@ -89,3 +89,7 @@ Settings
 
     output_parser: callable
         Output parser. By default None.
+    
+.. note::
+
+    By default, Scriptor does not use shell to avoid command injection.
