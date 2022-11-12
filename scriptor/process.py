@@ -5,18 +5,6 @@ from abc import abstractmethod
 from typing import Any, Union
 from .utils import to_string, to_bytes
 
-def _raise_for_error(proc:Union[subprocess.Popen, asyncio.subprocess.Process], cmd):
-    returncode = proc.returncode
-    if returncode:
-        stdout = to_string(proc.stdout)
-        stderr = to_string(proc.stderr)
-        raise ProcessError(
-            returncode=returncode, 
-            cmd=cmd,
-            output=stdout,
-            stderr=stderr,
-        )
-
 def _raise_for_error(returncode, cmd, stdout, stderr):
     if returncode:
         stdout = to_string(stdout)
