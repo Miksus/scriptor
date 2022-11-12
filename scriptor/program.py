@@ -2,7 +2,7 @@
 import subprocess
 from io import BytesIO, StringIO
 from copy import copy
-from typing import Callable, Tuple, Union, ByteString
+from typing import Callable, Iterable, Tuple, Union, ByteString
 from typing import Any, Dict, List, Literal
 from .runner import run_process_sync, run_process_async, run_process_iter, start_process, start_process_async
 from .utils import to_bytes, to_string
@@ -18,9 +18,11 @@ class Input:
 class BaseProgram:
     "Inheritable program class"
 
-    program:str = None
+    program:Union[str, Iterable[str]] = None
     output_type:Literal['str', 'bytes'] = 'str'
     output_parser = None
+
+    default_kwargs = None
 
     long_form_threshold = 3
     short_form = "-{}"
@@ -68,7 +70,8 @@ class BaseProgram:
         stdin = None
         cmd = []
         if self.program:
-            cmd.append(self.program)
+            program = [self.program] if isinstance(self.program, str) else list(self.program)
+            args = program + list(args)
         for arg in args:
             if isinstance(arg, Input):
                 stdin = arg.read()
@@ -77,8 +80,13 @@ class BaseProgram:
         return cmd, stdin
 
     def parse_kwargs(self, kwargs:Dict[str, Any]) -> Tuple[List[str], ByteString]:
+        kwds = {}
+        if self.default_kwargs is not None:
+            kwds.update(self.default_kwargs)
+        kwds.update(kwargs)
+
         cmd = []
-        for key, val in kwargs.items():
+        for key, val in kwds.items():
             key = self._format_key(key)
             val = str(val)
             cmd += [key, val]
@@ -143,8 +151,10 @@ class BaseProgram:
 class Program(BaseProgram):
     "Command-line program"
 
-    def __init__(self, program, output_parser=None, output_type="str", **kwargs):
+    def __init__(self, *program, output_parser=None, output_type="str", default_kwargs=None, **kwargs):
         self.program = program
         self.output_parser = output_parser
         self.output_type = output_type
+
+        self.default_kwargs = default_kwargs
         super().__init__(**kwargs)
