@@ -9,6 +9,8 @@ import pytest
 from scriptor.process import Process, AsyncProcess, ProcessError
 from scriptor.program import Program, Input
 
+IS_WINDOWS = platform.system() == "Windows"
+
 def param_async(func):
     mark_async = pytest.mark.asyncio
     mark_params = pytest.mark.parametrize('sync', [pytest.param(True, id="sync"), pytest.param(False, id="async")])
@@ -48,7 +50,11 @@ async def test_error(tmpdir, sync):
     assert stdout == b""
 
     stderr = process.get_stderr() if sync else await process.get_stderr()
-    assert stderr.decode("UTF-8").endswith("RuntimeError: Oops\r\n")
+    stderr_str = stderr.decode("UTF-8")
+    if IS_WINDOWS:
+        assert stderr_str.endswith("RuntimeError: Oops\r\n")
+    else:
+        assert stderr_str.endswith("RuntimeError: Oops\n")
 
 @param_async
 async def test_success(tmpdir, sync):
@@ -96,7 +102,10 @@ async def test_success_output(tmpdir, sync):
 
     # Test stdout and stderr
     stdout = process.get_stdout() if sync else await process.get_stdout()
-    assert stdout == b"Hello\r\nworld\r\n"
+    if IS_WINDOWS:
+        assert stdout == b"Hello\r\nworld\r\n"
+    else:
+        assert stdout == b"Hello\nworld\n"
 
     stderr = process.get_stderr() if sync else await process.get_stderr()
     assert stderr == b""
