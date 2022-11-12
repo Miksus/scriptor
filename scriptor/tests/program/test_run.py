@@ -211,7 +211,6 @@ async def test_input(tmpdir, sync, buffer):
 
     buff = Input(b'Hello') if buffer == "bytes" else Input('Hello')
     output = python(py_file, buff) if sync else await python.call_async(py_file, buff)
-
     if IS_WINDOWS:
         assert output == b"Hello world\r\n"
     else:
@@ -246,4 +245,3 @@ async def test_input_with_arg(tmpdir, sync, buffer, cli_args):
         assert output == b"Hello world\r\n"
     else:
         assert output == b"Hello world\n"
-
