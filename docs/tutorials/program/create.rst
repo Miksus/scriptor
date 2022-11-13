@@ -90,6 +90,16 @@ Settings
     output_parser: callable
         Output parser. By default None.
     
+    env: dict
+        Additional environment variables to pass to the program in addition
+        to the current. Overrides the ones that already exists. By default 
+        empty dict.
+
+    include_current_env: bool
+        Whether to include current environment variables. If you want to 
+        set all manually, set this to False and pass the environment 
+        variables via ``env``. By default True.
+
 .. note::
 
     By default, Scriptor does not use shell to avoid command injection.

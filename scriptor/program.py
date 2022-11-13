@@ -1,5 +1,6 @@
 
 import subprocess
+import os
 from io import BytesIO, StringIO
 from copy import copy
 from typing import Callable, Iterable, Tuple, Union, ByteString
@@ -32,6 +33,9 @@ class BaseProgram:
     long_form_threshold = 3
     short_form = "-{}"
     long_form = "--{}"
+
+    env = {}
+    include_current_env = True
 
     def __init__(self, timeout=None, cwd=None, arg_form:Literal['short', '-', 'long', '--', None]=None, encoding=None):
 
@@ -69,7 +73,16 @@ class BaseProgram:
     def get_process_kwargs(self):
         return dict(
             timeout=self.timeout, cwd=self.cwd, encoding=self.encoding,
+            env=self._get_environ()
         )
+
+    def _get_environ(self):
+        "Get environment variables"
+        env = {}
+        if self.include_current_env:
+            env.update(os.environ)
+        env.update(self.env)
+        return env
 
     def parse_args(self, args:tuple) -> Tuple[List[str], ByteString]:
         stdin = None
