@@ -34,15 +34,15 @@ class BaseProgram:
     short_form = "-{}"
     long_form = "--{}"
 
-    env = {}
-    include_current_env = True
-
-    def __init__(self, timeout=None, cwd=None, arg_form:Literal['short', '-', 'long', '--', None]=None, encoding=None):
+    def __init__(self, timeout=None, cwd=None, env=None, include_current_env=True, arg_form:Literal['short', '-', 'long', '--', None]=None, encoding=None):
 
         self.timeout = timeout
+        self.env = env
         self.cwd = cwd
         self.arg_form = arg_form
         self.encoding = encoding
+
+        self.include_current_env = include_current_env
 
     def __call__(self, *args, **kwargs):
         "Run the program (with given parameters)"
@@ -81,7 +81,8 @@ class BaseProgram:
         env = {}
         if self.include_current_env:
             env.update(os.environ)
-        env.update(self.env)
+        if self.env is not None:
+            env.update(self.env)
         return env
 
     def parse_args(self, args:tuple) -> Tuple[List[str], ByteString]:
