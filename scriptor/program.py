@@ -1,5 +1,6 @@
 
 import subprocess
+import os
 from io import BytesIO, StringIO
 from copy import copy
 from typing import Callable, Iterable, Tuple, Union, ByteString
@@ -33,12 +34,15 @@ class BaseProgram:
     short_form = "-{}"
     long_form = "--{}"
 
-    def __init__(self, timeout=None, cwd=None, arg_form:Literal['short', '-', 'long', '--', None]=None, encoding=None):
+    def __init__(self, timeout=None, cwd=None, env=None, include_current_env=True, arg_form:Literal['short', '-', 'long', '--', None]=None, encoding=None):
 
         self.timeout = timeout
+        self.env = env
         self.cwd = cwd
         self.arg_form = arg_form
         self.encoding = encoding
+
+        self.include_current_env = include_current_env
 
     def __call__(self, *args, **kwargs):
         "Run the program (with given parameters)"
@@ -69,7 +73,17 @@ class BaseProgram:
     def get_process_kwargs(self):
         return dict(
             timeout=self.timeout, cwd=self.cwd, encoding=self.encoding,
+            env=self._get_environ()
         )
+
+    def _get_environ(self):
+        "Get environment variables"
+        env = {}
+        if self.include_current_env:
+            env.update(os.environ)
+        if self.env is not None:
+            env.update(self.env)
+        return env
 
     def parse_args(self, args:tuple) -> Tuple[List[str], ByteString]:
         stdin = None

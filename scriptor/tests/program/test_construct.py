@@ -32,6 +32,12 @@ def test_use_not_found():
     with pytest.raises(AttributeError):
         python.use(non_existent="value")
 
+def test_init():
+    python = Program(sys.executable, timeout=20, cwd="path/to/script", env={"MY_VAR": "a value"})
+    assert python.timeout == 20
+    assert python.cwd == "path/to/script"
+    assert python.env == {"MY_VAR": "a value"}
+
 def test_args_with_init(tmpdir):
     py_file = tmpdir.join("myfile.py")
     py_file.write(dedent("""

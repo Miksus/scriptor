@@ -245,3 +245,21 @@ async def test_input_with_arg(tmpdir, sync, buffer, cli_args):
         assert output == b"Hello world\r\n"
     else:
         assert output == b"Hello world\n"
+
+@param_async
+async def test_env_var(tmpdir, sync):
+    py_file = tmpdir.join("myfile.py")
+    py_file.write(dedent("""
+        import os
+        env_var = os.environ['MY_VAR']
+        assert env_var == 'value'
+        print(env_var)
+        """
+    ))
+
+    python = Program(sys.executable).use(env={"MY_VAR": 'value'})
+    if sync:
+        output = python(py_file)
+    else:
+        output = await python.call_async(py_file)
+    assert output == 'value'
